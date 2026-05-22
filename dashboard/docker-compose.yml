@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  dashboard:
+    # Construye la imagen usando el Dockerfile en el directorio actual.
+    build: .
+    # Asigna un nombre amigable al contenedor.
+    container_name: votacion_dashboard
+    # Mapea el puerto 8501 del host al puerto 8501 del contenedor.
+    ports:
+      - "8501:8501"
+    # Monta el codigo local en el contenedor.
+    # Esto permite que los cambios en tu codigo se reflejen al instante sin reconstruir la imagen.
+    volumes:
+      - ./dashboard:/app/dashboard
