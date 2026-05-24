@@ -1,0 +1,18 @@
+# Dependencias completas del proyecto (dashboard + taller final ML).
+# Para el dashboard Streamlit sigue existiendo dashboard/requirements.txt
+# con la version minima; este archivo cubre todo lo necesario para
+# generar los datos, ejecutar el notebook y entrenar los modelos.
+
+streamlit>=1.45,<2
+pandas>=2.2.3,<3
+numpy>=1.26,<3
+pydeck>=0.9.1,<1
+matplotlib>=3.8,<4
+seaborn>=0.13,<1
+scikit-learn>=1.4,<2
+joblib>=1.3,<2
+jupyter>=1.0,<2
+notebook>=7.0,<8
+nbformat>=5.9,<6
+nbconvert>=7.0,<8
+ipykernel>=6.25,<7

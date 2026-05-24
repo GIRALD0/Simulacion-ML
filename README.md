@@ -1,193 +1,188 @@
-# Sistema de Votacion Educativo
+# Sistema de Votación Educativo · Taller Final ML
 
-Sistema de Votacion es una aplicacion educativa en **Streamlit** para simular una jornada de votacion participativa en Medellin. La entrega quedo reducida a lo esencial: una interfaz web, datos sinteticos en memoria, graficas, tablas, mapa territorial y una explicacion clara del flujo tipo Big Data y Machine Learning.
+Proyecto del curso de **Machine Learning y Simulación**. Combina dos
+piezas complementarias:
 
-No usa PostgreSQL, FastAPI, Kafka ni servicios externos de backend. La idea es que el proyecto se pueda ejecutar rapido en clase y que el foco sea entender los datos.
+1. Un **dashboard Streamlit** que simula una jornada de votación
+   participativa en Medellín (ciudadanos, votos, logs, mapa territorial).
+2. El **taller final de Machine Learning** sobre los mismos datos: un
+   notebook ejecutable que implementa K-Means, DBSCAN, Random Forest
+   y PCA + regresión logística, con su documento técnico y su
+   presentación ejecutiva.
 
-## 1. Estructura del proyecto
+> Opción A de la rúbrica — Trabajo sobre el proyecto Votación.
+
+---
+
+## 1. Estructura del repositorio
 
 ```text
-entrega_final_votaciones/
+Simulacion-ML/
 ├── dashboard/
-│   ├── streamlit_app.py      # Aplicacion principal
-│   └── requirements.txt      # Dependencias Python
+│   ├── streamlit_app.py        # Aplicación Streamlit
+│   └── requirements.txt        # Dependencias mínimas del dashboard
 ├── config/
-│   ├── __init__.py
-│   └── settings.py           # Configuracion simple
-├── .env                      # Valores locales sugeridos
-├── .env.example              # Plantilla de configuracion
-├── .dockerignore
-├── .gitignore
-├── cli.py                    # Comandos de ayuda
-├── Dockerfile                # Imagen Docker principal
-├── Dockerfile.streamlit      # Dockerfile alterno para Streamlit
-└── README.md                 # Esta guia
+│   └── settings.py             # Parámetros globales
+├── data/                       # CSV generados (ciudadanos, votos, logs, comunas)
+├── notebooks/
+│   └── taller_final_ml.ipynb   # Notebook del taller (ejecutado y con outputs)
+├── docs/
+│   ├── documento_tecnico.md    # Informe 4-6 páginas
+│   └── presentacion_ejecutiva.md  # 5 diapositivas
+├── outputs/
+│   ├── figuras/                # 12 figuras del EDA y los modelos
+│   ├── modelos/                # K-Means, RF, PCA, LogReg serializados
+│   └── comunas_con_cluster.csv # Resultado del clustering territorial
+├── generate_data.py            # Script de generación de datos sintéticos
+├── build_notebook.py           # Utilidad para reconstruir el notebook
+├── cli.py                      # Comandos auxiliares
+├── requirements.txt            # Dependencias completas del proyecto
+├── Dockerfile                  # Imagen del dashboard
+└── README.md                   # Este archivo
 ```
 
 ## 2. Requisitos
 
-- Python 3.11 o superior.
+- Python 3.11 o superior (probado con 3.13).
 - pip.
-- Navegador web.
-- Docker opcional.
+- Navegador para el dashboard.
+- ~600 MB libres entre dependencias y artefactos.
 
-## 3. Instalacion local
+## 3. Instalación
 
-Desde la carpeta del proyecto:
-
-```bash
-cd entrega_final_votaciones
+```powershell
+cd Simulacion-ML
 python -m venv .venv
-source .venv/bin/activate
-pip install -r dashboard/requirements.txt
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
 ```
 
-## 4. Ejecutar la aplicacion
+En bash:
 
-Opcion directa:
+```bash
+cd Simulacion-ML
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+## 4. Flujo del taller final de Machine Learning
+
+```text
+1. generate_data.py   ->  data/*.csv
+2. taller_final_ml.ipynb  ->  outputs/figuras + outputs/modelos
+3. docs/documento_tecnico.md  ->  informe escrito
+4. docs/presentacion_ejecutiva.md  ->  5 diapositivas
+```
+
+### 4.1 Generar los datasets
+
+```bash
+python generate_data.py
+```
+
+Crea cuatro archivos en `data/`:
+
+| Archivo | Filas | Contenido |
+|---|---:|---|
+| `ciudadanos.csv` | 8.000 | ciudadanos habilitados (edad, género, comuna, validación, voto) |
+| `votos.csv` | ~7.500 | votos con canal, dispositivo, latencia, estado, hora |
+| `logs.csv` | 6.000 | eventos de auditoría con nivel y servicio |
+| `comunas_agregado.csv` | 21 | KPIs agregados por comuna/corregimiento |
+
+Los datos no son completamente aleatorios: el generador inyecta señales
+realistas (latencia por canal, dependencia entre latencia y estado del
+voto, brecha digital en corregimientos) para que los modelos encuentren
+patrones interpretables.
+
+### 4.2 Ejecutar el notebook
+
+Opción A — abrir Jupyter y correr todas las celdas:
+
+```bash
+jupyter notebook notebooks/taller_final_ml.ipynb
+```
+
+Opción B — ejecutar en línea de comandos y dejar las salidas embebidas:
+
+```bash
+jupyter nbconvert --to notebook --execute --inplace \
+        notebooks/taller_final_ml.ipynb \
+        --ExecutePreprocessor.timeout=180
+```
+
+Al terminar quedarán en `outputs/`:
+
+- 12 figuras PNG (EDA + modelos),
+- 6 modelos `.joblib` (K-Means, Random Forest, PCA, etc.),
+- `comunas_con_cluster.csv` con la asignación final de K-Means.
+
+### 4.3 Documento técnico y presentación
+
+- `docs/documento_tecnico.md` — informe de 4-6 páginas con introducción,
+  dataset, metodología, modelos, resultados, conclusiones y recomendaciones.
+- `docs/presentacion_ejecutiva.md` — cinco diapositivas en Markdown,
+  listas para exportar a PDF o slides.
+
+## 5. Algoritmos implementados
+
+| # | Algoritmo | Grupo de la rúbrica | Métrica principal |
+|---|---|---|---|
+| 1 | K-Means (k=3) | No supervisado | silhouette ≈ 0.29 |
+| 2 | DBSCAN (eps=0.6) | No supervisado | 5-9% de votos marcados como atípicos |
+| 3 | Random Forest (350 árboles) | Supervisado | accuracy 0.877, F1-macro 0.528 |
+| 4 | PCA + Reg. logística | Complementario | F1-macro 0.482 (baseline lineal) |
+
+## 6. Ejecutar el dashboard original
+
+El dashboard sigue siendo parte del proyecto y se usa para demostrar el
+flujo Big Data:
 
 ```bash
 streamlit run dashboard/streamlit_app.py
 ```
 
-Opcion con el CLI del proyecto:
+o vía CLI:
 
 ```bash
 python cli.py dashboard
 ```
 
-Luego abre:
+URL local: `http://localhost:8501`.
 
-```text
-http://localhost:8501
-```
+## 7. Reproducibilidad
 
-## 5. Ejecutar con Docker
+- Semilla global fijada en `SEED = 42` en `generate_data.py`, el notebook
+  y todos los modelos `sklearn`.
+- Las versiones de las librerías están acotadas en `requirements.txt`.
+- El notebook se puede regenerar desde `build_notebook.py` y volver a
+  ejecutar para verificar reproducibilidad punto a punto.
 
-```bash
-docker build -t sistema-votacion-educativo .
-docker run --rm -p 8501:8501 sistema-votacion-educativo
-```
-
-Luego abre:
-
-```text
-http://localhost:8501
-```
-
-## 6. Como funciona por dentro
-
-```text
-Parametros en Streamlit
-        |
-        v
-Generacion de datos sinteticos
-        |
-        v
-Agregaciones con pandas
-        |
-        v
-Indicadores, tablas y mapa
-        |
-        v
-Data Lake conceptual y variables para Machine Learning
-```
-
-La barra lateral permite cambiar:
-
-- cantidad de ciudadanos,
-- cantidad de votos,
-- cantidad de logs,
-- tasa de validacion,
-- varianza entre comunas,
-- semilla de reproducibilidad.
-
-Cuando cambias esos valores, Streamlit recalcula la simulacion. La semilla permite repetir el mismo escenario para comparar resultados.
-
-Los topes minimos de la simulacion estan organizados para trabajar como proyecto de Big Data:
-
-| Fuente | Minimo permitido | Valor inicial sugerido |
-| --- | ---: | ---: |
-| Ciudadanos | 500.000 | 1.000.000 |
-| Votos | 500.000 | 650.000 |
-| Logs | 500.000 | 1.500.000 |
-
-Para que la interfaz siga siendo rapida, el sistema calcula agregados sobre el volumen completo configurado y solo muestra una muestra de hasta 5.000 filas por fuente en las tablas de registros.
-
-## 7. Que genera la simulacion
-
-La app crea tres grupos de datos:
-
-| Grupo | Que representa |
-| --- | --- |
-| Ciudadanos | Personas habilitadas para participar |
-| Votos | Eventos de votacion por proyecto |
-| Logs | Eventos de auditoria y operacion |
-
-Con esos datos calcula:
-
-- ciudadanos por comuna,
-- votos por proyecto,
-- votos por canal,
-- votos por dependencia,
-- votos por comuna y proyecto,
-- logs por nivel,
-- tasa de participacion,
-- proyecto lider por territorio.
-
-## 8. Pestañas del dashboard
-
-| Pestana | Para que sirve |
-| --- | --- |
-| Aprender | Explica la arquitectura simplificada |
-| Simulador | Muestra el proceso de generacion sintetica |
-| Data Lake | Explica las capas raw, bronze, silver y gold |
-| Resultados | Grafica votos por proyecto, canal y dependencia |
-| Territorio | Compara ciudadanos y votos por comuna |
-| Mapa | Visualiza participacion territorial en Medellin |
-| Registros | Muestra ejemplos de ciudadanos y votos |
-| Auditoria | Muestra logs sinteticos y errores |
-
-## 9. Data Lake conceptual
-
-La aplicacion no escribe un Data Lake real en disco. Lo explica de forma pedagogica:
-
-| Capa | Significado |
-| --- | --- |
-| raw | Datos originales como llegaron |
-| bronze | Datos con estructura y tipos claros |
-| silver | Datos limpios, normalizados y listos para unir |
-| gold | Indicadores listos para analisis y dashboard |
-
-Este enfoque permite explicar Big Data sin obligar a instalar una base de datos o un cluster.
-
-## 10. Machine Learning conceptual
-
-La aplicacion prepara datos que pueden usarse para ejercicios de Machine Learning, por ejemplo:
-
-- clasificar territorios con baja participacion,
-- detectar anomalias en logs y votos,
-- segmentar comunas por comportamiento de participacion,
-- priorizar proyectos segun patrones de canal, territorio y dependencia.
-
-En esta version no se entrena un modelo real; el foco es dejar los datos, variables y agregaciones listos para explicar el flujo antes de agregar librerias como scikit-learn o Spark MLlib.
-
-## 11. Archivos importantes
-
-- `dashboard/streamlit_app.py`: contiene la interfaz, generacion de datos, agregaciones y visualizaciones.
-- `dashboard/requirements.txt`: lista las librerias necesarias.
-- `config/settings.py`: centraliza valores simples de configuracion.
-- `cli.py`: permite lanzar el dashboard o ver un resumen del proyecto.
-- `Dockerfile`: empaqueta la aplicacion para ejecutarla en contenedor.
-
-## 12. Comandos utiles
+## 8. Comandos útiles (resumen)
 
 ```bash
-python cli.py resumen
-python -m py_compile dashboard/streamlit_app.py cli.py config/settings.py
+# Generar datos sintéticos
+python generate_data.py
+
+# Reconstruir el notebook desde el script (sin ejecutar)
+python build_notebook.py
+
+# Ejecutar el notebook completo y embeber salidas
+jupyter nbconvert --to notebook --execute --inplace \
+        notebooks/taller_final_ml.ipynb \
+        --ExecutePreprocessor.timeout=180
+
+# Dashboard
 streamlit run dashboard/streamlit_app.py
+
+# Resumen rápido del proyecto
+python cli.py resumen
 ```
 
-## 13. Que se elimino
+## 9. Notas finales
 
-Se retiraron documentos, notebooks, laboratorios, pruebas y codigo viejo que describian otra arquitectura. Tambien se quitaron referencias operativas a PostgreSQL, FastAPI y Kafka porque ya no son necesarios para ejecutar esta version.
+El proyecto está pensado para reproducirse en una sola sesión: clonar
+el repo, crear el entorno virtual, ejecutar `generate_data.py` y luego
+el notebook. Los modelos y figuras quedan persistidos en `outputs/` para
+poder integrarlos al documento o a la presentación sin tener que volver
+a entrenar.

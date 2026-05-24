@@ -43,8 +43,10 @@ runtime/
 # Data Lake
 datalake/
 
-# CSV files
+# CSV files (excluimos por defecto, pero conservamos los datasets del taller)
 *.csv
+!data/*.csv
+!outputs/*.csv
 
 # Temporary packaging artifacts
 votapp_pro_entrega*.zip
